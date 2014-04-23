@@ -33,11 +33,13 @@ int aes_init(unsigned char *key_data, int key_data_len, unsigned char *salt, EVP
     printf("Key size is %d bits - it should be 256 bits", i);
     return -1;    
   }
+  #ifdef _DEBUG
   for(; x<32; x++)
     printf("Key: %x iv: %x \n", key[x], iv[x]);
   
   for(x=0; x<8; x++)
     printf("salt: %x\n", salt[x]);
+  #endif
 
   EVP_CIPHER_CTX_init(e_ctx);
   EVP_EncryptInit_ex(e_ctx, EVP_aes_256_cbc(), NULL, key, iv);
@@ -173,7 +175,7 @@ int main(void){
   int strlen_pt = strlen(pt)+1;
   #ifdef _DEBUG
   printf("%s\n", pt);
-  printf("%d\n", str_len);
+  printf("%d\n", strlen_pt);
   fflush(stdout);
   #endif
 
@@ -225,13 +227,19 @@ int main(void){
       attr[n_bytes-4] = '\0';
 
       char*rct_hex = hex_bt(attr);
+
+      #ifdef _DEBUG
       printf("%s\n", rct_hex);
+      #endif
 
       int rct_len = strlen(rct_hex);
-      printf("%d", rct_len);
 
+      #ifdef _DEBUG
+      printf("%d\n", rct_len);
+      #endif
+      
       char* plaintext = (char *)aes_decrypt(&dec, rct_hex, &rct_len);
-      printf("%s", plaintext);
+      printf("%s\n", plaintext);
       
       fflush(stdout);
     }
