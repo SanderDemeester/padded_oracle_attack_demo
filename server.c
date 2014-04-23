@@ -21,9 +21,11 @@ char response[] = "HTTP/1.1 200 OK\r\n"
 
 int aes_init(unsigned char *key_data, int key_data_len, unsigned char *salt, EVP_CIPHER_CTX *e_ctx,
 	     EVP_CIPHER_CTX *d_ctx){
-  int i = EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha1(), salt, key_data, key_data_len, nrounds, key, iv);
   int nrounds = 5;
+  unsigned char key[32];
+  unsigned char iv[32];
   int x = 0;
+  int i = EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha1(), salt, key_data, key_data_len, nrounds, key, iv);
   
   if(i != 32){
     printf("Key size is %d bits - it should be 256 bits", i);
@@ -56,7 +58,7 @@ unsigned char*aes_encrypt(EVP_CIPHER_CTX *e, unsigned char *pt, int *len){
  
   /* update ciphertext, c_len is filled with the length of ciphertext generated,
    *len is the size of plaintext in bytes */
-  if(!EVP_EncryptUpdate(e, ciphertext, &c_len, plaintext, *len)){
+  if(!EVP_EncryptUpdate(e, ciphertext, &c_len, pt, *len)){
     printf("ERROR in EVP_EncryptUpdate \n");
     return NULL;
   }
@@ -71,14 +73,40 @@ unsigned char*aes_encrypt(EVP_CIPHER_CTX *e, unsigned char *pt, int *len){
   return ciphertext;
 }
 unsigned char*aes_decrypt(EVP_CIPHER_CTX*e, unsigned char *ct, int *len){
+  /* plaintext will always be equal to or lesser than length of ciphertext*/
+  int p_len = *len, f_len = 0;
+  unsigned char *pt = (unsigned char *)malloc(p_len);
+ 
+  if(!EVP_DecryptInit_ex(e, NULL, NULL, NULL, NULL)){
+    printf("ERROR in EVP_DecryptInit_ex \n");
+    return NULL;
+  }
+ 
+  if(!EVP_DecryptUpdate(e, pt, &p_len, ct, *len)){
+    printf("ERROR in EVP_DecryptUpdate\n");
+    return NULL;
+  }
+ 
+  if(!EVP_DecryptFinal_ex(e, pt+p_len, &f_len)){
+    printf("ERROR in EVP_DecryptFinal_ex\n");
+    return NULL;
+  }
+ 
+  *len = p_len + f_len;
+  return pt;
 }
 
 int main(void){
   int one = 1, client_fd;
   struct sockaddr_in srv_addr, cli_addr;
   socklen_t sin_len = sizeof(cli_addr);
-  
+  char*revc_buffer = (char*) malloc(sizeof(char)*100);
+  int recv_len = 0;
   int sock = socket(AF_INET, SOCK_STREAM, 0);
+
+  unsigned char* p_substring_begin;
+  unsigned char* p_substring_end;
+
   if (sock < 0)
     err(1, "can't open socket");
  
@@ -103,8 +131,22 @@ int main(void){
       perror("Can't accept");
       continue;
     }
- 
+    
+
     write(client_fd, response, sizeof(response) - 1); /*-1:'\0'*/
+    recv_len = recvfrom(client_fd, revc_buffer, 100, 0,(struct sockaddr*)&cli_addr, &sin_len);
+    revc_buffer[recv_len] = 0;
+    p_substring_begin = strstr(revc_buffer, "enc=");
+    printf("%s", p_substring_begin);
+    if(p_substring_begin != 0){
+      p_substring_end = strstr(p_substring_begin, " ");
+      int n_bytes = p_substring_end - p_substring_begin;      
+      printf("%d", n_bytes);
+      printf("found foundsubstring");
+      printf("%s", p_substring_begin);
+    }
+    printf(revc_buffer);
     close(client_fd);
   }
+  free(revc_buffer);
 }
