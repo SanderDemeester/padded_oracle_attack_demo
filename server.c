@@ -44,6 +44,31 @@ int aes_init(unsigned char *key_data, int key_data_len, unsigned char *salt, EVP
 }
   
 unsigned char*aes_encrypt(EVP_CIPHER_CTX *e, unsigned char *pt, int *len){
+  int c_len = *len + AES_BLOCK_SIZE - 1;
+  int f_len = 0;
+  unsigned char *ciphertext = (unsigned char *)malloc(c_len);
+ 
+  /* allows reusing of 'e' for multiple encryption cycles */
+  if(!EVP_EncryptInit_ex(e, NULL, NULL, NULL, NULL)){
+    printf("ERROR in EVP_EncryptInit_ex \n");
+    return NULL;
+  }
+ 
+  /* update ciphertext, c_len is filled with the length of ciphertext generated,
+   *len is the size of plaintext in bytes */
+  if(!EVP_EncryptUpdate(e, ciphertext, &c_len, plaintext, *len)){
+    printf("ERROR in EVP_EncryptUpdate \n");
+    return NULL;
+  }
+ 
+  /* update ciphertext with the final remaining bytes */
+  if(!EVP_EncryptFinal_ex(e, ciphertext+c_len, &f_len)){
+    printf("ERROR in EVP_EncryptFinal_ex \n");
+    return NULL;
+  }
+ 
+  *len = c_len + f_len;
+  return ciphertext;
 }
 unsigned char*aes_decrypt(EVP_CIPHER_CTX*e, unsigned char *ct, int *len){
 }
