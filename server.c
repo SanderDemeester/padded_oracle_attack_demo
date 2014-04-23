@@ -137,7 +137,6 @@ int main(void){
     recv_len = recvfrom(client_fd, revc_buffer, 100, 0,(struct sockaddr*)&cli_addr, &sin_len);
     revc_buffer[recv_len] = 0;
     p_substring_begin = strstr(revc_buffer, "enc=");
-    printf("%s", p_substring_begin);
     if(p_substring_begin != 0){
       p_substring_end = strstr(p_substring_begin, " ");
       int n_bytes = p_substring_end - p_substring_begin;      
@@ -145,7 +144,6 @@ int main(void){
       printf("found foundsubstring");
       printf("%s", p_substring_begin);
     }
-    printf(revc_buffer);
     close(client_fd);
   }
   free(revc_buffer);
