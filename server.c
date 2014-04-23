@@ -14,10 +14,8 @@
 char response[] = "HTTP/1.1 200 OK\r\n"
 "Content-Type: text/html; charset=UTF-8\r\n\r\n"
 "<doctype !html><html><head><title>Bye-bye baby bye-bye</title>"
-"<style>body { background-color: #111 }"
-"h1 { font-size:4cm; text-align: center; color: black;"
-" text-shadow: 0 0 2mm red}</style></head>"
-  "<body><h1>Goodbye, world!</h1></body></html>\r\n";
+"</head>"
+"<body><h1>sup</h1></body></html>\r\n";
 
 int aes_init(unsigned char *key_data, int key_data_len, unsigned char *salt, EVP_CIPHER_CTX *e_ctx,
 	     EVP_CIPHER_CTX *d_ctx){
@@ -106,6 +104,8 @@ int main(void){
 
   unsigned char* p_substring_begin;
   unsigned char* p_substring_end;
+  // http argument should be stored in attr
+  unsigned char* attr;
 
   if (sock < 0)
     err(1, "can't open socket");
@@ -125,8 +125,6 @@ int main(void){
   listen(sock, 5);
   while (1) {
     client_fd = accept(sock, (struct sockaddr *) &cli_addr, &sin_len);
-    printf("got connection\n");
- 
     if (client_fd == -1) {
       perror("Can't accept");
       continue;
@@ -139,10 +137,12 @@ int main(void){
     p_substring_begin = strstr(revc_buffer, "enc=");
     if(p_substring_begin != 0){
       p_substring_end = strstr(p_substring_begin, " ");
-      int n_bytes = p_substring_end - p_substring_begin;      
-      printf("%d", n_bytes);
-      printf("found foundsubstring");
-      printf("%s", p_substring_begin);
+      int n_bytes = p_substring_end - p_substring_begin;
+      // -4 because the "enc=" string and +1 for the '\0' symbol
+      attr = (char*) malloc(sizeof(char)*(n_bytes-4)+1);
+      strncpy(attr, p_substring_begin + 4, n_bytes-4);
+      attr[n_bytes] = '0';
+      printf("%s", attr);
     }
     close(client_fd);
   }
