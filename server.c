@@ -43,6 +43,10 @@ int aes_init(unsigned char *key_data, int key_data_len, unsigned char *salt, EVP
   return 0;
 }
   
+unsigned char*aes_encrypt(EVP_CIPHER_CTX *e, unsigned char *pt, int *len){
+}
+unsigned char*aes_decrypt(EVP_CIPHER_CTX*e, unsigned char *ct, int *len){
+}
 
 int main(void){
   int one = 1, client_fd;
