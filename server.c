@@ -17,7 +17,7 @@ static int byteMapLen = sizeof(byteMap);
 
 char response[] = "HTTP/1.1 200 OK\r\n"
 "Content-Type: text/html; charset=UTF-8\r\n\r\n"
-"<doctype !html><html><head><title>Bye-bye baby bye-bye</title>"
+"<doctype !html><html><head><title>Sup</title>"
 "</head>"
 "<body><h1>sup</h1></body></html>\r\n";
 
