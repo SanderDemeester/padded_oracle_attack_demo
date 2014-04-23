@@ -1,5 +1,6 @@
 CFLAGS=-lcrypto -Wdeprecated-declarations
 
+all: server
 debug: CFLAGS +=-D_DEBUG
 debug: server
 server: server.o
