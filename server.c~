@@ -8,16 +8,15 @@
 #include <arpa/inet.h>
 #include <err.h>
 #include <openssl/evp.h>
+#include <string.h>
 
 #define AES_BLOCK_SIZE 256
 
 char response[] = "HTTP/1.1 200 OK\r\n"
 "Content-Type: text/html; charset=UTF-8\r\n\r\n"
 "<doctype !html><html><head><title>Bye-bye baby bye-bye</title>"
-"<style>body { background-color: #111 }"
-"h1 { font-size:4cm; text-align: center; color: black;"
-" text-shadow: 0 0 2mm red}</style></head>"
-  "<body><h1>Goodbye, world!</h1></body></html>\r\n";
+"</head>"
+"<body><h1>sup</h1></body></html>\r\n";
 
 int aes_init(unsigned char *key_data, int key_data_len, unsigned char *salt, EVP_CIPHER_CTX *e_ctx,
 	     EVP_CIPHER_CTX *d_ctx){
@@ -103,6 +102,12 @@ int main(void){
   char*revc_buffer = (char*) malloc(sizeof(char)*100);
   int recv_len = 0;
   int sock = socket(AF_INET, SOCK_STREAM, 0);
+
+  unsigned char* p_substring_begin;
+  unsigned char* p_substring_end;
+  // http argument should be stored in attr
+  unsigned char* attr;
+
   if (sock < 0)
     err(1, "can't open socket");
  
@@ -121,17 +126,28 @@ int main(void){
   listen(sock, 5);
   while (1) {
     client_fd = accept(sock, (struct sockaddr *) &cli_addr, &sin_len);
-    printf("got connection\n");
- 
     if (client_fd == -1) {
       perror("Can't accept");
       continue;
     }
     
+
     write(client_fd, response, sizeof(response) - 1); /*-1:'\0'*/
     recv_len = recvfrom(client_fd, revc_buffer, 100, 0,(struct sockaddr*)&cli_addr, &sin_len);
     revc_buffer[recv_len] = 0;
-    printf(revc_buffer);
+    p_substring_begin = (unsigned char*)strstr((const char*)revc_buffer, (const char*)"enc=");
+    if(p_substring_begin != 0){
+      p_substring_end = (unsigned char*)strstr((const char*)p_substring_begin, (const char*)" ");
+      int n_bytes = p_substring_end - p_substring_begin;
+      // -4 because the "enc=" string and +1 for the '\0' symbol
+      attr = (unsigned char*) malloc(sizeof(char)*(n_bytes-4)+1);
+      strncpy((char*)attr, (const char*)(p_substring_begin + 4), n_bytes-4);
+      attr[n_bytes-4] = '\0';
+      fprintf(stdout, attr);
+      printf("%s", attr);
+      printf("%d", strlen(attr));
+      printf("dit is een test");
+    }
     close(client_fd);
   }
   free(revc_buffer);

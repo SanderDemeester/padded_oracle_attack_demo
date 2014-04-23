@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <err.h>
 #include <openssl/evp.h>
+#include <string.h>
 
 #define AES_BLOCK_SIZE 256
 
@@ -112,7 +113,7 @@ int main(void){
  
   setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
  
-  int port = 8080;
+  int port = 8081;
   srv_addr.sin_family = AF_INET;
   srv_addr.sin_addr.s_addr = INADDR_ANY;
   srv_addr.sin_port = htons(port);
@@ -134,16 +135,19 @@ int main(void){
     write(client_fd, response, sizeof(response) - 1); /*-1:'\0'*/
     recv_len = recvfrom(client_fd, revc_buffer, 100, 0,(struct sockaddr*)&cli_addr, &sin_len);
     revc_buffer[recv_len] = 0;
-    p_substring_begin = strstr(revc_buffer, "enc=");
-    if(p_substring_begin != 0){
-      p_substring_end = strstr(p_substring_begin, " ");
+    p_substring_begin = (unsigned char*)strstr((const char*)revc_buffer, (const char*)"enc=");
+    if(p_substring_begin){
+      p_substring_end = (unsigned char*)strstr((const char*)p_substring_begin, (const char*)" ");
       int n_bytes = p_substring_end - p_substring_begin;
       // -4 because the "enc=" string and +1 for the '\0' symbol
-      attr = (char*) malloc(sizeof(char)*(n_bytes-4)+1);
-      strncpy(attr, p_substring_begin + 4, n_bytes-4);
-      attr[n_bytes] = '0';
+      attr = (unsigned char*) malloc(sizeof(char)*(n_bytes-4)+1);
+      strncpy((char*)attr, (const char*)(p_substring_begin + 4), n_bytes-4);
+      attr[n_bytes-4] = '\0';
       printf("%s", attr);
+      fflush(stdout);
+      //printf("%s", p_substring_begin);
     }
+
     close(client_fd);
   }
   free(revc_buffer);
