@@ -97,6 +97,12 @@ unsigned char*aes_decrypt(EVP_CIPHER_CTX*e, unsigned char *ct, int *len){
   *len = p_len + f_len;
   return pt;
 }
+static uint8_t nibbleFromChar(char c){
+  if(c >= '0' && c <= '9') return c - '0';
+  if(c >= 'a' && c <= 'f') return c - 'a' + 10;
+  if(c >= 'A' && c <= 'F') return c - 'A' + 10;
+  return 255;
+}
 
 /* Utility function to convert nibbles (4 bit values) into a hex character representation */
 static char
@@ -117,14 +123,14 @@ char *bt_hex(uint8_t *bytes, size_t buflen){
   retval[i] = '\0';
   return retval;
 }
-char *hexStringToBytes(char *inhex){
-  uint8_t *retval;
-  uint8_t *p;
+char *hex_bt(char *inhex){
+  char *retval;
+  char *p;
   int len, i;
   
   len = strlen(inhex) / 2;
   retval = malloc(len+1);
-  for(i=0, p = (uint8_t *) inhex; i<len; i++) {
+  for(i=0, p = (char *) inhex; i<len; i++) {
     retval[i] = (nibbleFromChar(*p) << 4) | nibbleFromChar(*(p+1));
     p += 2;
   }
@@ -142,11 +148,15 @@ int main(void){
 
   // Define plaintext
   unsigned char* pt = "it is a good day to die hard";
+
+  // Strings needed to parse http verb
   unsigned char* p_substring_begin;
   unsigned char* p_substring_end;
+
   // http argument should be stored in attr
   unsigned char* attr;
 
+  // enc data
   unsigned char*key_data = "MgXtf937pFYaUFUePF68TuXppNQe9hmP";
   unsigned char salt[] = {1,2,3,4,5,6,7,8};
 
@@ -159,11 +169,23 @@ int main(void){
     fflush(stdout);
     return -1;
   }
-  int str_len = strlen(pt)+1;
-  char*ct = aes_encrypt(&en, (unsigned char*)pt, &str_len);
-  printf(bt_hex(ct, strlen(ct)));
-  
+
+  int strlen_pt = strlen(pt)+1;
+  #ifdef _DEBUG
+  printf("%s\n", pt);
+  printf("%d\n", str_len);
   fflush(stdout);
+  #endif
+
+  char*ct = aes_encrypt(&en, (unsigned char*)pt, &strlen_pt);
+  char*ct_hex = bt_hex(ct, strlen(ct)*2);
+
+  #ifdef _DEBUG
+  printf("%s\n", ct);
+  #endif
+  printf("%s\n",ct_hex);
+  fflush(stdout);
+
   if (sock < 0)
     err(1, "can't open socket");
  
@@ -187,23 +209,32 @@ int main(void){
       continue;
     }
     
-
     write(client_fd, response, sizeof(response) - 1); /*-1:'\0'*/
     recv_len = recvfrom(client_fd, revc_buffer, 100, 0,(struct sockaddr*)&cli_addr, &sin_len);
+
     revc_buffer[recv_len] = 0;
     p_substring_begin = (unsigned char*)strstr((const char*)revc_buffer, (const char*)"enc=");
+
     if(p_substring_begin){
       p_substring_end = (unsigned char*)strstr((const char*)p_substring_begin, (const char*)" ");
+      
       int n_bytes = p_substring_end - p_substring_begin;
       // -4 because the "enc=" string and +1 for the '\0' symbol
       attr = (unsigned char*) malloc(sizeof(char)*(n_bytes-4)+1);
       strncpy((char*)attr, (const char*)(p_substring_begin + 4), n_bytes-4);
       attr[n_bytes-4] = '\0';
-      printf("%s", attr);
-      fflush(stdout);
-      //printf("%s", p_substring_begin);
-    }
 
+      char*rct_hex = hex_bt(attr);
+      printf("%s\n", rct_hex);
+
+      int rct_len = strlen(rct_hex);
+      printf("%d", rct_len);
+
+      char* plaintext = (char *)aes_decrypt(&dec, rct_hex, &rct_len);
+      printf("%s", plaintext);
+      
+      fflush(stdout);
+    }
     close(client_fd);
   }
   free(revc_buffer);
