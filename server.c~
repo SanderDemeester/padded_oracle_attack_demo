@@ -108,6 +108,19 @@ int main(void){
   // http argument should be stored in attr
   unsigned char* attr;
 
+  unsigned char*key_data = "MgXtf937pFYaUFUePF68TuXppNQe9hmP";
+  unsigned char salt[] = {1,2,3,4,5,6,7,8};
+  // define CTX openssl structures for enc and dec
+  EVP_CIPHER_CTX en;
+  EVP_CIPHER_CTX dec;
+
+  
+  
+  if(aes_init(key_data, strlen(key_data), salt, &en, &dec)){
+    printf("could not init aes cihper");
+    fflush(stdout);
+    return -1;
+  }
   if (sock < 0)
     err(1, "can't open socket");
  

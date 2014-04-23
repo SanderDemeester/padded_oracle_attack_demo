@@ -12,6 +12,9 @@
 
 #define AES_BLOCK_SIZE 256
 
+static char byteMap[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+static int byteMapLen = sizeof(byteMap);
+
 char response[] = "HTTP/1.1 200 OK\r\n"
 "Content-Type: text/html; charset=UTF-8\r\n\r\n"
 "<doctype !html><html><head><title>Bye-bye baby bye-bye</title>"
@@ -95,6 +98,40 @@ unsigned char*aes_decrypt(EVP_CIPHER_CTX*e, unsigned char *ct, int *len){
   return pt;
 }
 
+/* Utility function to convert nibbles (4 bit values) into a hex character representation */
+static char
+nibbleToChar(uint8_t nibble)
+{
+  if(nibble < byteMapLen) return byteMap[nibble];
+  return '*';
+}
+char *bt_hex(uint8_t *bytes, size_t buflen){
+  char *retval;
+  int i;
+  
+  retval = malloc(buflen*2 + 1);
+  for(i=0; i<buflen; i++) {
+    retval[i*2] = nibbleToChar(bytes[i] >> 4);
+    retval[i*2+1] = nibbleToChar(bytes[i] & 0x0f);
+  }
+  retval[i] = '\0';
+  return retval;
+}
+char *hexStringToBytes(char *inhex){
+  uint8_t *retval;
+  uint8_t *p;
+  int len, i;
+  
+  len = strlen(inhex) / 2;
+  retval = malloc(len+1);
+  for(i=0, p = (uint8_t *) inhex; i<len; i++) {
+    retval[i] = (nibbleFromChar(*p) << 4) | nibbleFromChar(*(p+1));
+    p += 2;
+  }
+  retval[len] = 0;
+  return retval;
+}
+
 int main(void){
   int one = 1, client_fd;
   struct sockaddr_in srv_addr, cli_addr;
@@ -103,6 +140,8 @@ int main(void){
   int recv_len = 0;
   int sock = socket(AF_INET, SOCK_STREAM, 0);
 
+  // Define plaintext
+  unsigned char* pt = "it is a good day to die hard";
   unsigned char* p_substring_begin;
   unsigned char* p_substring_end;
   // http argument should be stored in attr
@@ -110,17 +149,21 @@ int main(void){
 
   unsigned char*key_data = "MgXtf937pFYaUFUePF68TuXppNQe9hmP";
   unsigned char salt[] = {1,2,3,4,5,6,7,8};
+
   // define CTX openssl structures for enc and dec
   EVP_CIPHER_CTX en;
   EVP_CIPHER_CTX dec;
-
-  
   
   if(aes_init(key_data, strlen(key_data), salt, &en, &dec)){
     printf("could not init aes cihper");
     fflush(stdout);
     return -1;
   }
+  int str_len = strlen(pt)+1;
+  char*ct = aes_encrypt(&en, (unsigned char*)pt, &str_len);
+  printf(bt_hex(ct, strlen(ct)));
+  
+  fflush(stdout);
   if (sock < 0)
     err(1, "can't open socket");
  
