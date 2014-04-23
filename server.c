@@ -7,6 +7,9 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <err.h>
+#include <openssl/evp.h>
+
+#define AES_BLOCK_SIZE 256
 
 char response[] = "HTTP/1.1 200 OK\r\n"
 "Content-Type: text/html; charset=UTF-8\r\n\r\n"
@@ -15,6 +18,31 @@ char response[] = "HTTP/1.1 200 OK\r\n"
 "h1 { font-size:4cm; text-align: center; color: black;"
 " text-shadow: 0 0 2mm red}</style></head>"
   "<body><h1>Goodbye, world!</h1></body></html>\r\n";
+
+int aes_init(unsigned char *key_data, int key_data_len, unsigned char *salt, EVP_CIPHER_CTX *e_ctx,
+	     EVP_CIPHER_CTX *d_ctx){
+  int i = EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha1(), salt, key_data, key_data_len, nrounds, key, iv);
+  int nrounds = 5;
+  int x = 0;
+  
+  if(i != 32){
+    printf("Key size is %d bits - it should be 256 bits", i);
+    return -1;    
+  }
+  for(; x<32; x++)
+    printf("Key: %x iv: %x \n", key[x], iv[x]);
+  
+  for(x=0; x<8; x++)
+    printf("salt: %x\n", salt[x]);
+
+  EVP_CIPHER_CTX_init(e_ctx);
+  EVP_EncryptInit_ex(e_ctx, EVP_aes_256_cbc(), NULL, key, iv);
+  EVP_CIPHER_CTX_init(d_ctx);
+  EVP_DecryptInit_ex(d_ctx, EVP_aes_256_cbc(), NULL, key, iv);
+
+  return 0;
+}
+  
 
 int main(void){
   int one = 1, client_fd;
