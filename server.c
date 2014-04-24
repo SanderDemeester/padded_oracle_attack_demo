@@ -11,6 +11,9 @@
 #include <string.h>
 
 #define AES_BLOCK_SIZE 256
+#define EVP_INIT_FAIL -1
+#define EVP_ENC_UPDATE -2
+#define EVP_ENC_FINAL -3
 
 static char byteMap[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 static int byteMapLen = sizeof(byteMap);
@@ -76,6 +79,8 @@ unsigned char*aes_encrypt(EVP_CIPHER_CTX *e, unsigned char *pt, int *len){
   *len = c_len + f_len;
   return ciphertext;
 }
+/*
+*/
 unsigned char*aes_decrypt(EVP_CIPHER_CTX*e, unsigned char *ct, int *len){
   /* plaintext will always be equal to or lesser than length of ciphertext*/
   int p_len = *len, f_len = 0;
