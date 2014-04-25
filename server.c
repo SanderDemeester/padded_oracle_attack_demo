@@ -19,6 +19,8 @@
 static char byteMap[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 static int byteMapLen = sizeof(byteMap);
 
+char not_found_res[] = "HTTP/1.1 404\r\n";
+char bad_request_res[] = "HTTP/1.1 400\r\n";
 char response[] = "HTTP/1.1 200 OK\r\n"
 "Content-Type: text/html; charset=UTF-8\r\n\r\n"
 "<doctype !html><html><head><title>Sup</title>"
