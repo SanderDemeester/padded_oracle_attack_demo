@@ -11,9 +11,10 @@
 #include <string.h>
 
 #define AES_BLOCK_SIZE 256
+
 #define EVP_INIT_FAIL -1
-#define EVP_ENC_UPDATE -2
-#define EVP_ENC_FINAL -3
+#define EVP_DEC_UPDATE -2
+#define EVP_DEC_FINAL -3
 // 404, 400 (Bad Reauest), 200
 static char byteMap[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 static int byteMapLen = sizeof(byteMap);
@@ -88,17 +89,17 @@ unsigned char*aes_decrypt(EVP_CIPHER_CTX*e, unsigned char *ct, int *len){
  
   if(!EVP_DecryptInit_ex(e, NULL, NULL, NULL, NULL)){
     printf("ERROR in EVP_DecryptInit_ex \n");
-    return NULL;
+    return EVP_INIT_FAIL;
   }
  
   if(!EVP_DecryptUpdate(e, pt, &p_len, ct, *len)){
     printf("ERROR in EVP_DecryptUpdate\n");
-    return NULL;
+    return EVP_DEC_UPDATE;
   }
  
   if(!EVP_DecryptFinal_ex(e, pt+p_len, &f_len)){
     printf("ERROR in EVP_DecryptFinal_ex\n");
-    return NULL;
+    return EVP_DEC_FINAL;
   }
  
   *len = p_len + f_len;
