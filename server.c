@@ -14,7 +14,7 @@
 #define EVP_INIT_FAIL -1
 #define EVP_ENC_UPDATE -2
 #define EVP_ENC_FINAL -3
-
+// 404, 400 (Bad Reauest), 200
 static char byteMap[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 static int byteMapLen = sizeof(byteMap);
 
@@ -178,11 +178,6 @@ int main(void){
   }
 
   int strlen_pt = strlen(pt)+1;
-  #ifdef _DEBUG
-  printf("%s\n", pt);
-  printf("%d\n", strlen_pt);
-  fflush(stdout);
-  #endif
 
   char*ct = aes_encrypt(&en, (unsigned char*)pt, &strlen_pt);
   char*ct_hex = bt_hex(ct, strlen(ct)*2);
