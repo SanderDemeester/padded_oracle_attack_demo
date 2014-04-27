@@ -214,7 +214,6 @@ int main(void){
       continue;
     }
     
-    write(client_fd, response, sizeof(response) - 1); /*-1:'\0'*/
     recv_len = recvfrom(client_fd, revc_buffer, 100, 0,(struct sockaddr*)&cli_addr, &sin_len);
 
     revc_buffer[recv_len] = 0;
@@ -243,8 +242,27 @@ int main(void){
       
       char* plaintext = (char *)aes_decrypt(&dec, rct_hex, &rct_len);
       printf("%s\n", plaintext);
+
+      if(plaintext == EVP_DEC_FINAL){
+	#ifdef _DEBUG
+	printf("EVP_DEC_FINAL");
+	#endif
+	write(client_fd, bad_request_res, sizeof(bad_request_res) - 1); /*-1:'\0'*/
+      }else if(!strcmp(plaintext,pt)){
+	#ifdef _DEBUG
+	printf("strcmp match");
+	#endif
+	write(client_fd, response, sizeof(response) - 1); /*-1:'\0'*/
+      }else{
+	#ifdef _DEBUG
+	printf("strcmp not match");
+	#endif
+	write(client_fd, not_found_res, sizeof(not_found_res) - 1); /*-1:'\0'*/
+      }
       
       fflush(stdout);
+    }else{
+      write(client_fd, response, sizeof(response)-1);
     }
     close(client_fd);
   }
