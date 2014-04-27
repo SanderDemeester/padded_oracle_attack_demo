@@ -241,7 +241,6 @@ int main(void){
       #endif
       
       char* plaintext = (char *)aes_decrypt(&dec, rct_hex, &rct_len);
-      printf("%s\n", plaintext);
 
       if(plaintext == EVP_DEC_FINAL){
 	#ifdef _DEBUG
