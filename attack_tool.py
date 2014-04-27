@@ -2,7 +2,7 @@
 import urllib2
 import sys
 
-TARGET = ''
+TARGET = 'http://localhost:8081/enc='
 def strxor(a,b):
     if len(a) > len(b):
         return "".join([chr(ord(x)^ord(y)) for (x,y) in zip(a[:len(b)],b)])
@@ -16,6 +16,7 @@ class PaddingOracle(object):
         try:
             f = urllib2.urlopen(req)          # Wait for response
         except urllib2.HTTPError, e:          
+            print e.code
             if e.code == 404:
                 return True 
             return False 
