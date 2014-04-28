@@ -16,7 +16,6 @@ class PaddingOracle(object):
         try:
             f = urllib2.urlopen(req)          # Wait for response
         except urllib2.HTTPError, e:          
-            print e.code
             if e.code == 404:
                 return True 
             return False 
@@ -25,7 +24,7 @@ class PaddingOracle(object):
         # IV_block <- C_n-1 
         # CT_block <- C_n 
         
-        zero_block = ("00"*16).decode("hex")
+        zero_block = ("ff"*16).decode("hex")
         padding = 1
         PT_block_list = []
         for pos in range(0,16):
@@ -35,7 +34,7 @@ class PaddingOracle(object):
                     evil_padding = strxor(strxor(chr(padding)*len(evil_block),evil_block),IV_block[len(IV_block)-len(evil_block):])
                 else:
                     evil_padding = ''
-                print "%s - %s" % ("00"*(16-len("".join(PT_block_list[::-1]).encode("hex"))) + "".join(PT_block_list[::-1]).encode("hex"),(zero_block[0:16-padding] + chr(gues) + evil_padding + CT_block).encode("hex"))
+                print "%s - %s" % ("ff"*(16-len("".join(PT_block_list[::-1]).encode("hex"))) + "".join(PT_block_list[::-1]).encode("hex"),(zero_block[0:16-padding] + chr(gues) + evil_padding + CT_block).encode("hex"))
 
                 if self.query((zero_block[0:16-padding] + chr(gues) + evil_padding + CT_block).encode("hex")) == True:
                     print "found PT-byte <- %s " % strxor(strxor(chr(padding), chr(gues)),IV_block[16-padding]).encode("hex")
