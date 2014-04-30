@@ -169,7 +169,7 @@ int main(void){
   int sock = socket(AF_INET, SOCK_STREAM, 0);
 
   // Define plaintext
-  unsigned char* pt = "sander";
+  unsigned char* pt = "sander is cool";
 
   // Strings needed to parse http verb
   unsigned char* p_substring_begin;
@@ -203,7 +203,7 @@ int main(void){
   #ifdef _DEBUG
   printf("%s\n", ct);
   #endif
-  printf("%s", bt_hex(iv,32));
+  printf("%s\n", bt_hex(iv,32));
   printf("%s\n",ct_hex);
   fflush(stdout);
 
